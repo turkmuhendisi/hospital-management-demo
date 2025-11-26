@@ -18,4 +18,4 @@ cmds = [
 [start]
 # Railway start komutu
 # Eğer gerçek entrypoint'in farklıysa (ör: web_dashboard.advanced.app.main) onu yaz
-cmd = "cd ../../.. && python -m uvicorn app.main:socket_app --host 0.0.0.0 --port $PORT"
+cmd = "python -m uvicorn app.main:socket_app --host 0.0.0.0 --port $PORT"
