@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: audit-postgres
+    environment:
+      POSTGRES_USER: audit_user
+      POSTGRES_PASSWORD: audit_password
+      POSTGRES_DB: audit_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U audit_user -d audit_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Audit Dashboard Application
+  dashboard:
+    build:
+      context: ../../..
+      dockerfile: web_dashboard/advanced/Dockerfile
+    container_name: audit-dashboard
+    environment:
+      # Application
+      APP_NAME: "Enterprise Audit Trail Dashboard"
+      APP_VERSION: "2.0.0"
+      DEBUG: "false"
+      
+      # Server
+      HOST: "0.0.0.0"
+      PORT: "8082"
+      
+      # Database
+      DATABASE_URL: "postgresql://audit_user:audit_password@postgres:5432/audit_db"
+      
+      # Security
+      SECRET_KEY: "change-this-to-a-secure-random-key-in-production"
+      ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
+      
+      # CORS
+      CORS_ORIGINS: '["http://localhost:8082","http://localhost:8081","*"]'
+      
+      # Data Generation
+      GENERATE_REALISTIC_DATA: "true"
+      DATA_GENERATION_INTERVAL: "5"
+      HISTORICAL_DATA_DAYS: "30"
+      
+      # Logging
+      LOG_LEVEL: "INFO"
+      LOG_FORMAT: "json"
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8082/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Reverse Proxy (Optional - for production)
+  nginx:
+    image: nginx:alpine
+    container_name: audit-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - dashboard
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: audit-network
+

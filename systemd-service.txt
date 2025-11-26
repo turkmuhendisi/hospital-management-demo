@@ -1,0 +1,56 @@
+# Systemd service file for Ubuntu/Debian VPS
+# Copy to: /etc/systemd/system/audit-dashboard.service
+
+[Unit]
+Description=Enterprise Audit Trail Dashboard
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/teleradyoloji-sim/teleradyoloji
+ExecStart=/usr/local/bin/python3 -m uvicorn web_dashboard.advanced.backend.main:socket_app --host 0.0.0.0 --port 8082
+
+# Restart configuration
+Restart=always
+RestartSec=10
+StartLimitInterval=0
+StartLimitBurst=10
+
+# Environment variables
+Environment="PYTHONUNBUFFERED=1"
+Environment="DATABASE_URL=postgresql://audit_user:your_password@localhost:5432/audit_db"
+Environment="SECRET_KEY=your-secret-key-here"
+Environment="DEBUG=false"
+Environment="LOG_LEVEL=INFO"
+Environment="GENERATE_REALISTIC_DATA=true"
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/teleradyoloji-sim/teleradyoloji/data
+ReadWritePaths=/opt/teleradyoloji-sim/teleradyoloji/logs
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
+
+# =====================================
+# Installation commands:
+# =====================================
+# sudo cp systemd-service.txt /etc/systemd/system/audit-dashboard.service
+# sudo systemctl daemon-reload
+# sudo systemctl enable audit-dashboard
+# sudo systemctl start audit-dashboard
+# sudo systemctl status audit-dashboard
+#
+# View logs:
+# sudo journalctl -u audit-dashboard -f
+

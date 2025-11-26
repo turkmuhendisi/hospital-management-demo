@@ -1,0 +1,32 @@
+# Render.com configuration
+services:
+  - type: web
+    name: audit-dashboard
+    env: python
+    region: frankfurt  # or oregon, singapore
+    plan: starter  # or free
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd teleradyoloji && python -m uvicorn web_dashboard.advanced.backend.main:socket_app --host 0.0.0.0 --port 8082
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.16
+      - key: DATABASE_URL
+        fromDatabase:
+          name: audit-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+      - key: GENERATE_REALISTIC_DATA
+        value: true
+      - key: LOG_LEVEL
+        value: INFO
+
+databases:
+  - name: audit-db
+    plan: starter  # or free
+    databaseName: audit_production
+    user: audit_user
+

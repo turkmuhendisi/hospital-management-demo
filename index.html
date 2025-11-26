@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Enterprise Audit Trail Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css?v=5.6">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <div class="nav-left">
+                <!-- Brand Logo and Name -->
+                <div class="brand-logo" style="display: flex; align-items: center; gap: 1rem; margin-right: 2rem; padding-right: 2rem; border-right: 2px solid rgba(59, 130, 246, 0.2);">
+                    <img src="/static/AsrınGlobalLogo.svg" alt="Asrın Global Logo" style="height: 48px; width: auto;">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 1.25rem; font-weight: 700; color: #111827; letter-spacing: 0.05em;">ASRIN GLOBAL</span>
+                        <span style="font-size: 0.7rem; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em;">Medıcal Technology</span>
+                    </div>
+                </div>
+                
+                <div class="hospital-badge" style="background: none; padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid #000000;">
+                    <i class="fas fa-hospital" style="color: #000000; margin-right: 0.5rem;"></i>
+                    <span style="color: #000000; font-weight: 600;">Ankara Şehir Hastanesi</span>
+                </div>
+            </div>
+            <div class="nav-right">
+                <div class="nav-stats">
+                    <div class="nav-stat">
+                        <i class="fas fa-users"></i>
+                        <span id="nav-user-count">0</span>
+                    </div>
+                    <div class="nav-stat" id="monitoring-devices-btn" style="cursor: pointer;" title="Monitoring Cihazları">
+                        <i class="fas fa-heartbeat" style="color: #10b981;"></i>
+                        <span id="nav-device-count">0</span>
+                    </div>
+                    <div class="nav-stat">
+                        <i class="fas fa-heartbeat"></i>
+                        <span id="nav-patient-count">0</span>
+                    </div>
+                    <div class="nav-stat critical">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="nav-alert-count">0</span>
+                    </div>
+                </div>
+                <div class="nav-controls">
+                    <button id="refresh-btn" class="btn-icon" title="Refresh">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button id="settings-btn" class="btn-icon" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button id="export-btn" class="btn-icon" title="Export">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="main-layout">
+            <!-- Left Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-search"></i> Gelişmiş Arama</h3>
+                    
+                    <!-- Doctor Search -->
+                    <div class="search-group">
+                        <label><i class="fas fa-user-md"></i> Doktor</label>
+                        <div class="search-input-group">
+                            <input type="text" id="doctor-search" placeholder="Doktor adı, ID ile ara...">
+                            <button class="search-btn"><i class="fas fa-search"></i></button>
+                        </div>
+                        <div id="doctor-results" class="search-results"></div>
+                    </div>
+
+                    <!-- Device Search -->
+                    <div class="search-group">
+                        <label><i class="fas fa-desktop"></i> Cihaz</label>
+                        <div class="search-input-group">
+                            <input type="text" id="device-search" placeholder="Cihaz adı, IP ile ara...">
+                            <button class="search-btn"><i class="fas fa-search"></i></button>
+                        </div>
+                        <div id="device-results" class="search-results"></div>
+                    </div>
+
+                    <!-- Patient Search -->
+                    <div class="search-group">
+                        <label><i class="fas fa-heartbeat"></i> Hasta</label>
+                        <div class="search-input-group">
+                            <input type="text" id="patient-search" placeholder="Hasta ID, adı ile ara...">
+                            <button class="search-btn"><i class="fas fa-search"></i></button>
+                        </div>
+                        <div id="patient-results" class="search-results"></div>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="search-group">
+                        <label><i class="fas fa-calendar"></i> Tarih Aralığı</label>
+                        <div class="date-range">
+                            <input type="datetime-local" id="start-date">
+                            <input type="datetime-local" id="end-date">
+                        </div>
+                    </div>
+
+                    <!-- Quick Filters -->
+                    <div class="search-group">
+                        <label><i class="fas fa-filter"></i> Hızlı Filtreler</label>
+                        <div class="filter-chips">
+                            <button class="filter-chip active" data-filter="all">Tümü</button>
+                            <button class="filter-chip" data-filter="critical">Kritik</button>
+                            <button class="filter-chip" data-filter="security">Güvenlik</button>
+                            <button class="filter-chip" data-filter="patient-access">Hasta Erişimi</button>
+                            <button class="filter-chip" data-filter="device-operations">Cihaz İşlemleri</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Media Tabs -->
+                <div class="sidebar-section">
+                    <h3><i class="fas fa-file-alt"></i> Medya ve Dökümanlar</h3>
+                    <div class="media-tabs">
+                        <button class="media-tab active" data-media="logs">
+                            <i class="fas fa-list"></i> Denetim Logları
+                        </button>
+                        <button class="media-tab" data-media="hl7">
+                            <i class="fas fa-exchange-alt"></i> HL7 Mesajları
+                            <span class="tab-count">0</span>
+                        </button>
+                        <button class="media-tab" data-media="dicom">
+                            <i class="fas fa-image"></i> DICOM Görüntüleri
+                            <span class="tab-count">0</span>
+                        </button>
+                        <button class="media-tab" data-media="reports">
+                            <i class="fas fa-file-pdf"></i> Raporlar
+                            <span class="tab-count">0</span>
+                        </button>
+                        <button class="media-tab" data-media="alerts">
+                            <i class="fas fa-bell"></i> Uyarılar
+                            <span class="tab-count">0</span>
+                        </button>
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- Content Tabs -->
+                <div class="content-header">
+                    <div class="content-tabs">
+                        <button class="content-tab active" data-content="dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Kontrol Paneli
+                        </button>
+                        <button class="content-tab" data-content="monitoring">
+                            <i class="fas fa-heartbeat"></i> Cihaz İzleme
+                        </button>
+                        <button class="content-tab" data-content="activity">
+                            <i class="fas fa-hospital-user"></i> Hareketlilik
+                        </button>
+                        <button class="content-tab" data-content="reports">
+                            <i class="fas fa-file-alt"></i> Raporlar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dashboard Content -->
+                <div id="dashboard-content" class="content-panel active">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h4>Toplam Etkinlikler</h4>
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="stat-number" id="total-events">0</div>
+                            <div class="stat-trend positive">
+                                <i class="fas fa-arrow-up"></i> +12%
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h4>Aktif Kullanıcılar</h4>
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-number" id="active-users">0</div>
+                            <div class="stat-trend positive">
+                                <i class="fas fa-arrow-up"></i> +5%
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h4>Güvenlik Olayları</h4>
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="stat-number" id="security-events">0</div>
+                            <div class="stat-trend negative">
+                                <i class="fas fa-arrow-down"></i> -3%
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <h4>Sistem Sağlığı</h4>
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <div class="stat-number" id="system-health">99.9%</div>
+                            <div class="stat-trend positive">
+                                <i class="fas fa-arrow-up"></i> +0.1%
+                            </div>
+                        </div>
+                    </div>
+
+                <!-- Log Entries Display -->
+                <div class="log-entries-section">
+                    <h4><i class="fas fa-list"></i> Log Kayıtları</h4>
+                    <div id="log-entries-container" class="log-entries-container">
+                        <div class="loading">Log Kayıtları Yükleniyor...</div>
+                    </div>
+                </div>
+                </div>
+
+                <!-- Device Monitoring Content -->
+                <div id="monitoring-content" class="content-panel">
+                    <div class="monitoring-header" style="margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <div>
+                                <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">
+                                    <i class="fas fa-heartbeat" style="color: #10b981;"></i> 
+                                    Canlı Cihaz İzleme
+                                </h3>
+                                <p style="color: var(--text-muted);">Patient Monitor, Ventilatör ve Vital Signs cihazlarının anlık takibi</p>
+                            </div>
+                            <div class="monitoring-stats" style="display: flex; gap: 1rem;">
+                                <div class="stat-badge" style="background: rgba(16, 185, 129, 0.1); padding: 0.75rem 1.5rem; border-radius: 0.5rem; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                    <div style="font-size: 0.75rem; color: #10b981; font-weight: 600; text-transform: uppercase;">Aktif Cihaz</div>
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;" id="active-monitors-count">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Clinic Filter -->
+                        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: white; border-radius: 0.5rem; border: 1px solid rgba(0,0,0,0.1);">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-filter" style="color: #6b7280;"></i>
+                                <label for="clinic-filter" style="font-size: 0.875rem; font-weight: 600; color: #374151;">Poliklinik:</label>
+                            </div>
+                            <select id="clinic-filter" style="flex: 1; max-width: 300px; padding: 0.5rem 2.5rem 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; color: #111827; background: white; cursor: pointer; appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 20 20%27 fill=%27none%27%3e%3cpath d=%27M7 7l3 3 3-3%27 stroke=%27%239ca3af%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.5em;">
+                                <option value="all">Tüm Poliklinikler</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; padding-left: 1rem; border-left: 1px solid #e5e7eb;">
+                                <span style="font-size: 0.75rem; color: #6b7280;">Görüntülenen:</span>
+                                <span id="filtered-devices-count" style="font-size: 0.875rem; font-weight: 700; color: #3b82f6;">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="monitoring-devices-grid" class="monitoring-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1.5rem;">
+                        <!-- Monitoring device cards will be inserted here -->
+                    </div>
+                </div>
+                
+                <!-- Hospital Activity Content -->
+                <div id="activity-content" class="content-panel">
+                    <!-- Breadcrumb Navigation -->
+                    <div id="activity-breadcrumb" style="margin-bottom: 1.5rem; display: none;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: white; border-radius: 0.5rem; border: 1px solid rgba(0,0,0,0.1);">
+                            <button id="breadcrumb-home" class="breadcrumb-item" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.5rem; background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                                <i class="fas fa-home"></i> Birimler
+                            </button>
+                            <i class="fas fa-chevron-right" style="font-size: 0.75rem; color: #9ca3af;"></i>
+                            <button id="breadcrumb-department" class="breadcrumb-item" style="display: none; padding: 0.25rem 0.5rem; background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 0.875rem; font-weight: 500;"></button>
+                            <i id="breadcrumb-arrow-2" class="fas fa-chevron-right" style="font-size: 0.75rem; color: #9ca3af; display: none;"></i>
+                            <span id="breadcrumb-clinic" class="breadcrumb-item" style="display: none; padding: 0.25rem 0.5rem; color: #111827; font-size: 0.875rem; font-weight: 600;"></span>
+                        </div>
+                    </div>
+
+                    <!-- Level 1: Hospital Departments -->
+                    <div id="activity-departments" class="activity-view">
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">
+                                <i class="fas fa-hospital" style="color: #3b82f6;"></i> 
+                                Hastane Birimleri
+                            </h3>
+                            <p style="color: var(--text-muted);">Birim bazlı hasta ve personel yoğunluk durumu</p>
+                        </div>
+                        <div id="departments-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
+                            <!-- Department cards will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Level 2: Department Clinics -->
+                    <div id="activity-clinics" class="activity-view" style="display: none;">
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">
+                                <i class="fas fa-clinic-medical" style="color: #10b981;"></i> 
+                                <span id="clinics-title">Poliklinikler</span>
+                            </h3>
+                            <p style="color: var(--text-muted);">Poliklinik bazlı hasta yoğunluk durumu</p>
+                        </div>
+                        <div id="clinics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem;">
+                            <!-- Clinic cards will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Level 3: Patient Timeline -->
+                    <div id="activity-timeline" class="activity-view" style="display: none;">
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">
+                                <i class="fas fa-user-injured" style="color: #f59e0b;"></i> 
+                                <span id="timeline-title">Hasta Hareketleri</span>
+                            </h3>
+                            <p style="color: var(--text-muted);">Ayakta ve yatan hastaların hareketlilik timeline'ı</p>
+                        </div>
+                        
+                        <!-- Patient Search -->
+                        <div style="margin-bottom: 1rem;">
+                            <div style="position: relative;">
+                                <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #9ca3af;"></i>
+                                <input 
+                                    type="text" 
+                                    id="patient-search" 
+                                    placeholder="Hasta adı ile ara..." 
+                                    style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.875rem; outline: none; transition: border-color 0.2s;"
+                                    onfocus="this.style.borderColor='#3b82f6'" 
+                                    onblur="this.style.borderColor='#e5e7eb'"
+                                />
+                            </div>
+                        </div>
+                        
+                        <!-- Patient Filter -->
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                            <button id="filter-outpatient" class="patient-filter-btn active" data-type="outpatient" style="flex: 1; padding: 0.75rem; border: 2px solid #3b82f6; background: #eff6ff; color: #3b82f6; border-radius: 0.5rem; cursor: pointer; font-size: 0.875rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <i class="fas fa-walking"></i> Ayakta Hastalar
+                            </button>
+                            <button id="filter-inpatient" class="patient-filter-btn" data-type="inpatient" style="flex: 1; padding: 0.75rem; border: 2px solid #e5e7eb; background: white; color: #6b7280; border-radius: 0.5rem; cursor: pointer; font-size: 0.875rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <i class="fas fa-bed"></i> Yatan Hastalar
+                            </button>
+                        </div>
+                        
+                        <div id="patients-timeline" style="display: grid; gap: 1rem;">
+                            <!-- Patient timeline cards will be inserted here -->
+                    </div>
+                </div>
+                </div>
+
+                <!-- Timeline Content -->
+                <div id="timeline-content" class="content-panel">
+                    <div class="empty-state">
+                        <i class="fas fa-timeline" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                        <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">Timeline View</h3>
+                        <p style="color: var(--text-muted);">Timeline visualization will be available when integrated with PACS/DICOM server</p>
+                    </div>
+                </div>
+
+                <!-- Analytics Content -->
+                <div id="analytics-content" class="content-panel">
+                    <div class="empty-state">
+                        <i class="fas fa-chart-line" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                        <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">Analytics Dashboard</h3>
+                        <p style="color: var(--text-muted);">Detailed analytics will be available when integrated with PACS/DICOM server</p>
+                    </div>
+                </div>
+
+                <!-- Reports Content -->
+                <div id="reports-content" class="content-panel">
+                    <div class="reports-grid">
+                        <div class="report-card">
+                            <h4><i class="fas fa-file-pdf"></i> Compliance Report</h4>
+                            <p>HBYS compliance audit report</p>
+                            <button class="btn-primary">Generate PDF</button>
+                        </div>
+                        <div class="report-card">
+                            <h4><i class="fas fa-chart-line"></i> Performance Report</h4>
+                            <p>System performance analysis</p>
+                            <button class="btn-primary">Generate Report</button>
+                        </div>
+                        <div class="report-card">
+                            <h4><i class="fas fa-shield-alt"></i> Security Report</h4>
+                            <p>Security events and threats</p>
+                            <button class="btn-primary">Generate Report</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Bottom Status Bar -->
+        <footer class="status-bar">
+            <div class="status-left">
+                <span class="status-indicator" id="connection-status"></span>
+                <span id="connection-text">Connected</span>
+                <span class="status-separator">|</span>
+                <span>Last Update: <span id="last-update">--:--:--</span></span>
+            </div>
+            <div class="status-right">
+                <span>Events: <span id="status-event-count">0</span></span>
+                <span class="status-separator">|</span>
+                <span>Rate: <span id="status-event-rate">0/min</span></span>
+            </div>
+        </footer>
+
+        <!-- Media Viewer Modal -->
+        <div id="media-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Media Viewer</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="media-viewer" class="media-viewer">
+                        <!-- Media content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div id="detail-panel" class="detail-panel">
+            <div class="detail-header">
+                <h4>Etkinlik Detayları</h4>
+                <button class="detail-close">&times;</button>
+            </div>
+            <div class="detail-content">
+                <!-- Etkinlik detayları buraya eklenecek -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates -->
+    <template id="activity-item-template">
+        <div class="activity-item">
+            <div class="activity-icon">
+                <i class="fas fa-circle"></i>
+            </div>
+            <div class="activity-content">
+                <div class="activity-message"></div>
+                <div class="activity-meta">
+                    <span class="activity-time"></span>
+                    <span class="activity-user"></span>
+                    <span class="activity-device"></span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="log-entry-template">
+        <div class="log-entry" data-level="" data-type="">
+            <!-- Header: Timestamp + Level + Actions -->
+            <div class="log-entry-header">
+                <div class="log-entry-left">
+            <div class="log-timestamp"></div>
+            <div class="log-level">
+                <i class="level-icon"></i>
+                <span class="level-text"></span>
+            </div>
+                </div>
+                <div class="log-actions">
+                    <button class="btn-action" title="Detayları Görüntüle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-action" title="Dışa Aktar">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Message -->
+            <div class="log-content">
+                <div class="log-message"></div>
+                
+                <!-- Bağlam: Kullanıcı, Cihaz, Hasta, Konum Detayları -->
+                <div class="log-context">
+                    <div class="context-item user-context">
+                        <i class="fas fa-user"></i>
+                        <span class="context-label">Kullanıcı:</span>
+                        <span class="context-value"></span>
+                    </div>
+                    <div class="context-item device-context">
+                        <i class="fas fa-desktop"></i>
+                        <span class="context-label">Cihaz:</span>
+                        <span class="context-value"></span>
+                    </div>
+                    <div class="context-item patient-context">
+                        <i class="fas fa-user-injured"></i>
+                        <span class="context-label">Hasta:</span>
+                        <span class="context-value"></span>
+                    </div>
+                    <div class="context-item floor-context">
+                        <i class="fas fa-layer-group"></i>
+                        <span class="context-label">Kat:</span>
+                        <span class="context-value"></span>
+                    </div>
+                    <div class="context-item clinic-context">
+                        <i class="fas fa-hospital"></i>
+                        <span class="context-label">Poliklinik:</span>
+                        <span class="context-value"></span>
+                    </div>
+                    <div class="context-item unit-context">
+                        <i class="fas fa-building"></i>
+                        <span class="context-label">Birim:</span>
+                        <span class="context-value"></span>
+                    </div>
+                    <div class="context-item room-context">
+                        <i class="fas fa-door-open"></i>
+                        <span class="context-label">Oda No:</span>
+                        <span class="context-value"></span>
+                    </div>
+                    <div class="context-item terminal-context">
+                        <i class="fas fa-tv"></i>
+                        <span class="context-label">Terminal:</span>
+                        <span class="context-value"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Fullscreen Monitoring Modal -->
+    <div id="monitoring-modal" class="monitoring-modal" style="display: none;">
+        <div class="monitoring-modal-overlay"></div>
+        <div class="monitoring-modal-content">
+            <button class="monitoring-modal-close" onclick="dashboard.closeMonitoringModal()">
+                <i class="fas fa-times"></i>
+                </button>
+            <div id="monitoring-modal-body">
+                <!-- Content will be dynamically inserted -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js" crossorigin="anonymous"></script>
+    
+    <!-- Chart.js for Real-time Monitoring -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Production Dashboard Script (v5.6) -->
+    <script src="/static/advanced-script-v2.js?v=5.6"></script>
+</body>
+</html>
