@@ -3,11 +3,12 @@
 
 class EnterpriseAuditDashboard {
     constructor() {
-        // Configuration - Dynamically use current host
-        const currentHost = window.location.hostname;
-        const currentPort = window.location.port || '8082';
-        this.apiBaseUrl = `http://${currentHost}:${currentPort}/api`;
-        this.socketUrl = `http://${currentHost}:${currentPort}`;
+        // Configuration - Use current URL protocol and host (Railway uses HTTPS without port)
+        const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const currentHost = window.location.host; // includes port if any
+        this.apiBaseUrl = `${protocol}//${currentHost}/api`;
+        this.socketUrl = `${wsProtocol}//${currentHost}`;
         
         // State
         this.isRealTime = true;
