@@ -2,6 +2,8 @@
 # Use APT packages instead of Nix for PostgreSQL support
 
 [phases.setup]
+nixPkgs = ["python39", "gcc"]
+
 # Use APT packages for system dependencies
 aptPkgs = ["postgresql-client", "libpq-dev", "gcc"]
 
