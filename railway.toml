@@ -11,9 +11,9 @@ builder = "nixpacks"
 # 3. Run: pip install -r requirements.txt
 
 [deploy]
-# Start command runs from teleradyoloji directory (3 levels up)
+# Start application directly (Railway already in repo root)
 # backend/ renamed to app/ to avoid Railway auto-detection
-startCommand = "cd ../../.. && python -m uvicorn web_dashboard.advanced.app.main:socket_app --host 0.0.0.0 --port $PORT"
+startCommand = "python -m uvicorn app.main:socket_app --host 0.0.0.0 --port $PORT"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
