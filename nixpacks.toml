@@ -1,0 +1,15 @@
+# Nixpacks configuration for Railway
+# Use APT packages instead of Nix for PostgreSQL support
+
+[phases.setup]
+# Use APT packages for system dependencies
+aptPkgs = ["postgresql-client", "libpq-dev", "gcc"]
+
+[phases.install]
+# Install Python dependencies
+cmds = ["python -m venv --copies /opt/venv", ". /opt/venv/bin/activate && pip install -r requirements.txt"]
+
+[phases.start]
+# Start command from railway.toml
+cmd = "cd ../../.. && python -m uvicorn app.main:socket_app --host 0.0.0.0 --port $PORT"
+
