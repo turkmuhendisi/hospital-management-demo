@@ -2,20 +2,14 @@
 # Use APT packages instead of Nix for PostgreSQL support
 
 [phases.setup]
-# Nix tarafında sadece Python + gcc kullan, postgres'i buradan kaldır
-nixPkgs = ["python39", "gcc"]
-
-# Sistem bağımlılıklarını APT ile kur
+# Use APT packages for system dependencies
 aptPkgs = ["postgresql-client", "libpq-dev", "gcc"]
 
 [phases.install]
-# Python bağımlılıklarını kur
-cmds = [
-  "python -m venv --copies /opt/venv",
-  ". /opt/venv/bin/activate && pip install -r requirements.txt"
-]
+# Install Python dependencies
+cmds = ["python -m venv --copies /opt/venv", ". /opt/venv/bin/activate && pip install -r requirements.txt"]
 
-[start]
-# Railway start komutu
-# Eğer gerçek entrypoint'in farklıysa (ör: web_dashboard.advanced.app.main) onu yaz
+[phases.start]
+# Start application directly (already in repo root)
 cmd = "python -m uvicorn app.main:socket_app --host 0.0.0.0 --port $PORT"
+
