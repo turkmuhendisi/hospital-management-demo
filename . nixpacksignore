@@ -1,0 +1,4 @@
+# Prevent Nixpacks from using app subdirectory
+# requirements.txt is in root, not in app/
+app/
+
